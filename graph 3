@@ -1,0 +1,84 @@
+package model;
+
+import java.util.*;
+
+public class Graph {
+    private final Map<Long, Vertex> vertices = new LinkedHashMap<>();
+    private final Map<Long, List<Edge>> adj = new HashMap<>();
+
+    public Graph() {}
+
+    public void addVertex(Vertex v) {
+        vertices.putIfAbsent(v.getId(), v);
+        adj.putIfAbsent(v.getId(), new ArrayList<>());
+    }
+
+    public Vertex getVertex(long id) { return vertices.get(id); }
+    public Collection<Vertex> getVertices() { return vertices.values(); }
+    public Set<Long> getVertexIds() { return vertices.keySet(); }
+
+    public void addEdge(long fromId, long toId, boolean oriented) {
+        double weight = 1.0;
+        if (oriented) {
+            Edge e = new Edge(fromId, toId, weight, true);
+            adj.get(fromId).add(e);
+        } else {
+            Edge e1 = new Edge(fromId, toId, weight, false);
+            Edge e2 = new Edge(toId, fromId, weight, false);
+            adj.get(fromId).add(e1);
+            adj.get(toId).add(e2);
+        }
+    }
+public List<Edge> getEdgesFrom(long id) {
+        return adj.getOrDefault(id, Collections.emptyList());
+    }
+
+    public List<Edge> getAllEdgesUnique() {
+        List<Edge> all = new ArrayList<>();
+        for (List<Edge> es : adj.values()) all.addAll(es);
+
+        Set<String> seen = new HashSet<>();
+        List<Edge> unique = new ArrayList<>();
+        for (Edge e : all) {
+            long a = e.getFrom();
+            long b = e.getTo();
+            boolean oriented = e.isOriented();
+            String key = oriented ? a + "->" + b : (Math.min(a, b) + "--" + Math.max(a, b));
+            if (!seen.contains(key)) {
+                seen.add(key);
+                unique.add(e);
+            }
+        }
+        return unique;
+    }
+
+    public int degree(long id) {
+        if (!adj.containsKey(id)) return 0;
+        int out = adj.get(id).size();
+        int in = 0;
+        for (List<Edge> es : adj.values()) for (Edge e : es) if (e.getTo() == id) in++;
+        return in + out;
+    }
+
+    public Map<Long, List<Edge>> getAdjacency() { return adj; }
+
+    public boolean isMixed() {
+        boolean hasOriented = false, hasUnoriented = false;
+        for (Edge e : getAllEdgesUnique()) {
+            if (e.isOriented()) hasOriented = true;
+            else hasUnoriented = true;
+            if (hasOriented && hasUnoriented) return true;
+        }
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Graph (").append(isMixed() ? "mixed" : "undirected").append(")\nVertices:\n");
+        for (Vertex v : vertices.values()) sb.append("  ").append(v).append("\n");
+        sb.append("Edges:\n");
+        for (Edge e : getAllEdgesUnique()) sb.append("  ").append(e).append("\n");
+        return sb.toString();
+    }
+}
