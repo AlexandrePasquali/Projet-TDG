@@ -1,0 +1,62 @@
+package io;
+
+import model.Graph;
+import model.Vertex;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+
+public class TxtGraphLoader {
+
+    public static Graph load(String filePath) throws IOException {
+        Graph g = new Graph();
+
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            boolean readingNodes = false;
+            boolean readingEdgesOriented = false;
+            boolean readingEdgesUnoriented = false;
+
+            while ((line = br.readLine()) != null) {
+                line = line.trim();
+                if (line.isEmpty()) continue;
+
+                if (line.startsWith("--- NODES ---")) {
+                    readingNodes = true;
+                    readingEdgesOriented = false;
+                    readingEdgesUnoriented = false;
+                    continue;
+                } else if (line.startsWith("--- EDGES --- (ORIENTED=true)")) {
+                    readingNodes = false;
+                    readingEdgesOriented = true;
+                    readingEdgesUnoriented = false;
+                    continue;
+                } else if (line.startsWith("--- EDGES --- (ORIENTED=false)")) {
+                    readingNodes = false;
+                    readingEdgesOriented = false;
+                    readingEdgesUnoriented = true;
+                    continue;
+                }
+
+                if (readingNodes && line.startsWith("NODE;")) {
+                    String[] parts = line.split(";");
+                    long id = Long.parseLong(parts[1].trim());
+                    String name = parts[2].trim();
+                    g.addVertex(new Vertex(id, name));
+                }
+
+                if ((readingEdgesOriented || readingEdgesUnoriented) && line.startsWith("EDGE;")) {
+                    String[] parts = line.split(";");
+                    long from = Long.parseLong(parts[1].trim());
+                    long to = Long.parseLong(parts[2].trim());
+                    boolean oriented = Boolean.parseBoolean(parts[3].split("=")[1].trim());
+
+                    g.addEdge(from, to, oriented);
+                }
+            }
+        }
+
+        return g;
+    }
+}
