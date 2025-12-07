@@ -1,0 +1,47 @@
+package alg;
+
+import model.Graph;
+import java.util.*;
+
+public class ChinesePostmanApprox {
+
+    public static List<Long> compute(Graph g, long depotId) {
+        Set<Long> targets = new HashSet<>(g.getVertexIds());
+        List<Long> tour = new ArrayList<>();
+        Set<Long> visited = new HashSet<>();
+        long current = depotId;
+        tour.add(current);
+        visited.add(current);
+
+        while (!visited.containsAll(targets)) {
+            Dijkstra.Result r = Dijkstra.shortestPaths(g, current);
+            long next = -1;
+            double best = Double.POSITIVE_INFINITY;
+            for (Long t : targets) {
+                if (!visited.contains(t)) {
+                    double d = r.dist.getOrDefault(t, Double.POSITIVE_INFINITY);
+                    if (d < best) { best = d; next = t; }
+                }
+            }
+            if (next == -1) break; // plus de sommet accessible
+            List<Long> path = Dijkstra.reconstructPath(r.prev, current, next);
+            for (int i = 1; i < path.size(); i++) {
+                long v = path.get(i);
+                tour.add(v);
+                visited.add(v);
+            }
+            current = next;
+        }
+        tour.add(depotId);
+        return tour;
+    }
+
+    public static double tourLength(Graph g, List<Long> tour) {
+        double total = 0.0;
+        for (int i = 0; i < tour.size() - 1; i++) {
+            Dijkstra.Result r = Dijkstra.shortestPaths(g, tour.get(i));
+            total += r.dist.getOrDefault(tour.get(i + 1), Double.POSITIVE_INFINITY);
+        }
+        return total;
+    }
+}
