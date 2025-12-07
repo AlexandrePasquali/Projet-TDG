@@ -1,0 +1,40 @@
+package alg;
+
+import model.Graph;
+import java.util.*;
+
+public class NearestNeighborTSP {
+
+    public static List<Long> tspNearestNeighbor(Graph g, long depotId, List<Long> points) {
+        Set<Long> remaining = new LinkedHashSet<>(points);
+        List<Long> tour = new ArrayList<>();
+        long current = depotId;
+        tour.add(current);
+
+        while (!remaining.isEmpty()) {
+            Dijkstra.Result r = Dijkstra.shortestPaths(g, current);
+            long next = -1;
+            double best = Double.POSITIVE_INFINITY;
+            for (Long p : remaining) {
+                double d = r.dist.getOrDefault(p, Double.POSITIVE_INFINITY);
+                if (d < best) { best = d; next = p; }
+            }
+            if (next == -1) break;
+            List<Long> path = Dijkstra.reconstructPath(r.prev, current, next);
+            for (int i = 1; i < path.size(); i++) tour.add(path.get(i));
+            remaining.remove(next);
+            current = next;
+        }
+        if (tour.get(tour.size()-1) != depotId) tour.add(depotId);
+        return tour;
+    }
+
+    public static double tourLength(Graph g, List<Long> seq) {
+        double total = 0.0;
+        for (int i=0;i<seq.size()-1;i++) {
+            Dijkstra.Result r = Dijkstra.shortestPaths(g, seq.get(i));
+            total += r.dist.getOrDefault(seq.get(i+1), Double.POSITIVE_INFINITY);
+        }
+        return total;
+    }
+}
