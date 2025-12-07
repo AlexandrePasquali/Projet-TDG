@@ -1,0 +1,171 @@
+package alg;
+
+import model.Graph;
+import model.Vertex;
+
+import java.util.*;
+
+public class PlanificationSecteurs {
+
+    private static final int DEFAULT_MAX_PER_SECTOR = 4;
+
+    private static boolean hasAnySector(Graph g) {
+        for (Vertex v : g.getVertices()) {
+            if (v.getSecteur() != null) return true;
+        }
+        return false;
+    }
+
+    private static long findDepotId(Graph g) {
+        for (Vertex v : g.getVertices()) {
+            if (v.getDemand() == 0) return v.getId();
+            String label = v.getLabel();
+            if (label != null && label.toLowerCase().contains("depot")) return v.getId();
+        }
+        return g.getVertexIds().iterator().hasNext() ? g.getVertexIds().iterator().next() : -1L;
+    }
+
+    private static int getDistance(Graph g, long uId, long vId) {
+        for (var e : g.getEdgesFrom(uId)) {
+            if (e.getTo() == vId) return 1; // distance = 1 pour voisins
+        }
+        return Integer.MAX_VALUE; // pas de lien direct
+    }
+
+    public static Map<String, Set<String>> buildSectorAdjacency(Graph g) {
+        Map<String, Set<String>> adj = new HashMap<>();
+        for (Vertex v : g.getVertices()) {
+            String s = v.getSecteur();
+            if (s != null) adj.putIfAbsent(s, new HashSet<>());
+        }
+        for (Long id : g.getVertexIds()) {
+            Vertex u = g.getVertex(id);
+            if (u == null) continue;
+            for (var e : g.getEdgesFrom(id)) {
+                Vertex w = g.getVertex(e.getTo());
+                if (w == null) continue;
+                String su = u.getSecteur();
+                String sw = w.getSecteur();
+                if (su != null && sw != null && !su.equals(sw)) {
+                    adj.get(su).add(sw);
+                    adj.get(sw).add(su);
+                }
+            }
+        }
+        return adj;
+    }
+
+    public static Map<String, Integer> greedyColor(Map<String, Set<String>> sectorAdj) {
+        Map<String, Integer> color = new HashMap<>();
+        List<String> sectors = new ArrayList<>(sectorAdj.keySet());
+        sectors.sort((a, b) -> sectorAdj.get(b).size() - sectorAdj.get(a).size());
+        for (String s : sectors) {
+            Set<Integer> used = new HashSet<>();
+            for (String nb : sectorAdj.get(s))
+                if (color.containsKey(nb)) used.add(color.get(nb));
+            int c = 0;
+            while (used.contains(c)) c++;
+            color.put(s, c);
+        }
+        return color;
+    }
+
+    public static Map<Integer, List<String>> planify(Graph g, int capPerCamion, int numberOfTrucks) {
+        if (!hasAnySector(g)) {
+            long depot = findDepotId(g);
+            alg.SectorAssigner.assign(g, depot, DEFAULT_MAX_PER_SECTOR);
+        }
+
+        Map<String, Set<String>> sectorAdj = buildSectorAdjacency(g);
+        for (Vertex v : g.getVertices()) {
+            String s = v.getSecteur();
+            if (s != null) sectorAdj.putIfAbsent(s, new HashSet<>());
+        }
+
+        Map<String, Integer> colors = greedyColor(sectorAdj);
+
+        Map<String, Integer> demand = new HashMap<>();
+        Map<String, List<Vertex>> housesBySector = new HashMap<>();
+        for (Vertex v : g.getVertices()) {
+            String s = v.getSecteur();
+            if (s == null) continue;
+            demand.put(s, demand.getOrDefault(s, 0) + v.getDemand());
+            housesBySector.computeIfAbsent(s, k -> new ArrayList<>()).add(v);
+        }
+
+        long depot = findDepotId(g);
+        for (var entry : housesBySector.entrySet()) {
+            List<Vertex> list = entry.getValue();
+            List<Vertex> sorted = new ArrayList<>();
+            Set<Vertex> remaining = new HashSet<>(list);
+            long current = depot;
+            while (!remaining.isEmpty()) {
+                Vertex nearest = null;
+                int minDist = Integer.MAX_VALUE;
+                for (Vertex v : remaining) {
+                    int dist = getDistance(g, current, v.getId());
+                    if (dist < minDist) {
+                        minDist = dist;
+                        nearest = v;
+                    }
+                }
+                if (nearest == null) break;
+                sorted.add(nearest);
+                remaining.remove(nearest);
+                current = nearest.getId();
+            }
+            housesBySector.put(entry.getKey(), sorted);
+        }
+
+        int maxPerDay = Math.max(1, capPerCamion * numberOfTrucks);
+
+        Map<Integer, List<String>> colorBuckets = new HashMap<>();
+        for (var e : colors.entrySet())
+            colorBuckets.computeIfAbsent(e.getValue(), k -> new ArrayList<>()).add(e.getKey());
+
+        Map<Integer, List<String>> finalPlan = new LinkedHashMap<>();
+        int day = 1;
+        List<Integer> cols = new ArrayList<>(colorBuckets.keySet());
+        Collections.sort(cols);
+
+        for (int col : cols) {
+            List<String> secs = colorBuckets.get(col);
+            Collections.sort(secs);
+            for (String s : secs) {
+                int q = demand.getOrDefault(s, 0);
+                List<Vertex> sortedHouses = housesBySector.getOrDefault(s, Collections.emptyList());
+                if (q <= maxPerDay) {
+                    finalPlan.put(day++, List.of(s));
+                } else {
+                    int parts = (int) Math.ceil(q / (double) maxPerDay);
+                    for (int p = 1; p <= parts; p++) {
+                        finalPlan.put(day++, List.of(s + " (partie " + p + "/" + parts + ")"));
+                    }
+                }
+            }
+        }
+        return finalPlan;
+    }
+
+    public static void printPlanning(Graph g, Map<Integer, List<String>> planning) {
+        Map<String, Integer> demand = new HashMap<>();
+        Map<String, List<Long>> houses = new HashMap<>();
+        for (Vertex v : g.getVertices()) {
+            String s = v.getSecteur();
+            if (s == null) continue;
+            demand.put(s, demand.getOrDefault(s, 0) + v.getDemand());
+            houses.computeIfAbsent(s, k -> new ArrayList<>()).add(v.getId());
+        }
+
+        System.out.println("\n=== REPARTITION PAR JOUR ===");
+        for (var e : planning.entrySet()) {
+            System.out.println("Jour " + e.getKey() + " :");
+            for (String secDesc : e.getValue()) {
+                String base = secDesc.split("\\s*\\(partie")[0].trim();
+                int q = demand.getOrDefault(base, 0);
+                List<Long> hs = houses.getOrDefault(base, Collections.emptyList());
+                System.out.println("  - " + secDesc + "  (demand=" + q + ", maisons=" + hs + ")");
+            }
+        }
+    }
+}
