@@ -1,0 +1,69 @@
+package alg;
+
+import model.Graph;
+import java.util.*;
+
+public class MSTApproxTSP {
+
+    public static List<Long> tspApproxMST(Graph g, long depotId, List<Long> points) {
+        LinkedHashSet<Long> S = new LinkedHashSet<>();
+        S.add(depotId);
+        S.addAll(points);
+
+        Map<Long, Map<Long, Double>> distmat = new HashMap<>();
+        for (Long s : S) {
+            Dijkstra.Result r = Dijkstra.shortestPaths(g, s);
+            Map<Long, Double> row = new HashMap<>();
+            for (Long t : S) row.put(t, r.dist.getOrDefault(t, Double.POSITIVE_INFINITY));
+            distmat.put(s, row);
+        }
+
+        Map<Long, Double> key = new HashMap<>();
+        Map<Long, Long> parent = new HashMap<>();
+        Set<Long> inTree = new HashSet<>();
+        for (Long s : S) key.put(s, Double.POSITIVE_INFINITY);
+        key.put(depotId, 0.0);
+        PriorityQueue<Long> pq = new PriorityQueue<>(Comparator.comparingDouble(key::get));
+        pq.addAll(S);
+
+        Map<Long, List<Long>> treeAdj = new HashMap<>();
+        for (Long s : S) treeAdj.put(s, new ArrayList<>());
+
+        while (!pq.isEmpty()) {
+            Long u = pq.poll();
+            inTree.add(u);
+            if (parent.containsKey(u)) {
+                Long p = parent.get(u);
+                treeAdj.get(u).add(p);
+                treeAdj.get(p).add(u);
+            }
+            for (Long v : S) {
+                if (inTree.contains(v)) continue;
+                double w = distmat.get(u).get(v);
+                if (Double.isInfinite(w)) continue;
+                if (w < key.get(v)) {
+                    key.put(v, w);
+                    parent.put(v, u);
+                    pq.remove(v);
+                    pq.add(v);
+                }
+            }
+        }
+
+        List<Long> order = new ArrayList<>();
+        Set<Long> visited = new HashSet<>();
+        dfsPreorder(treeAdj, depotId, visited, order);
+
+        LinkedHashSet<Long> unique = new LinkedHashSet<>(order);
+        List<Long> finalTour = new ArrayList<>(unique);
+        if (!finalTour.get(0).equals(depotId)) finalTour.add(0, depotId);
+        finalTour.add(depotId);
+        return finalTour;
+    }
+
+    private static void dfsPreorder(Map<Long, List<Long>> adj, Long u, Set<Long> vis, List<Long> order) {
+        vis.add(u);
+        order.add(u);
+        for (Long v : adj.get(u)) if (!vis.contains(v)) dfsPreorder(adj, v, vis, order);
+    }
+}
