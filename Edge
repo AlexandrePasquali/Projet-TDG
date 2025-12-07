@@ -1,0 +1,43 @@
+package model;
+
+public class Edge {
+    private final long from;
+    private final long to;
+    private final double weight;
+    private final boolean oriented;
+
+    public Edge(long from, long to, double weight, boolean oriented) {
+        this.from = from;
+        this.to = to;
+        this.weight = weight;
+        this.oriented = oriented;
+    }
+
+    public long getFrom() { return from; }
+    public long getTo() { return to; }
+    public double getWeight() { return weight; }
+    public boolean isOriented() { return oriented; }
+
+    @Override
+    public String toString() {
+        return from + (oriented ? " -> " : " -- ") + to + " (" + weight + ")";
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof Edge)) return false;
+        Edge e = (Edge) obj;
+        if (oriented != e.oriented) return false;
+        if (oriented) return from == e.from && to == e.to;
+        return (from == e.from && to == e.to) || (from == e.to && to == e.from);
+    }
+
+    @Override
+    public int hashCode() {
+        if (oriented) return Long.hashCode(from) * 31 + Long.hashCode(to);
+        long a = Math.min(from, to);
+        long b = Math.max(from, to);
+        return Long.hashCode(a) * 31 + Long.hashCode(b);
+    }
+}
