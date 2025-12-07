@@ -1,0 +1,251 @@
+package ui;
+
+import io.TxtGraphLoader;
+import model.Collectivite;
+import model.Graph;
+import model.Tournee;
+import model.Vertex;
+import alg.*;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.stream.Collectors;
+
+public class ConsoleApp {
+
+    private static final Scanner sc = new Scanner(System.in);
+    private static Graph graph = new Graph();
+    private static Collectivite collectivite = new Collectivite("Mairie locale");
+
+    public static void mainMenu() {
+        while (true) {
+            System.out.println("\n=== PROJET TDG - Menu principal ===");
+            System.out.println("1) Admin");
+            System.out.println("2) Entreprise (algorithmes)");
+            System.out.println("3) Collectivité (point de vue)");
+            System.out.println("0) Quitter");
+            System.out.print("Choix> ");
+            String c = sc.nextLine().trim();
+            switch (c) {
+                case "1": adminMenu(); break;
+                case "2": entrepriseMenu(); break;
+                case "3": collectiviteMenu(); break;
+                case "0": System.out.println("Au revoir."); return;
+                default: System.out.println("Choix invalide.");
+            }
+        }
+    }
+
+    /* ------------------- Admin ------------------- */
+    private static void adminMenu() {
+        while (true) {
+            System.out.println("\n--- Admin ---");
+            System.out.println("1) Charger un graphe depuis un fichier (sans les guillemets)");
+            System.out.println("2) Afficher résumé du graphe");
+            System.out.println("0) Retour");
+            System.out.print("Choix> ");
+            String c = sc.nextLine().trim();
+            switch (c) {
+                case "1":
+                    System.out.print("Chemin du fichier> ");
+                    String path = sc.nextLine().trim();
+                    try {
+                        graph = TxtGraphLoader.load(path);
+                        System.out.println("Graphe chargé : " + graph.getVertexIds().size()
+                                + " sommets, " + graph.getAllEdgesUnique().size() + " arêtes.");
+                        collectivite.setPlanFichier(path);
+                    } catch (IOException e) {
+                        System.out.println("Erreur lecture fichier : " + e.getMessage());
+                    }
+                    break;
+                case "2":
+                    System.out.println(graph);
+                    break;
+                case "0":
+                    return;
+                default:
+                    System.out.println("Choix invalide.");
+            }
+        }
+    }
+
+
+    /* ------------------- Entreprise (algorithmes) ------------------- */
+    private static void entrepriseMenu() {
+        while (true) {
+            System.out.println("\n--- Entreprise (algorithmes) ---");
+            System.out.println("1) Plus proche voisin (NearestNeighborTSP) depuis dépôt (vertex id)");
+            System.out.println("2) MST-approx TSP (MSTApproxTSP)");
+            System.out.println("3) Découpage capacitaire (DecoupeCapacitaire)");
+            System.out.println("4) Calculer plus courts chemins (Dijkstra) depuis un sommet");
+            System.out.println("5) Planification des secteurs (coloration + capacité)");
+            System.out.println("0) Retour");
+            System.out.print("Choix> ");
+
+            String c = sc.nextLine().trim();
+            switch (c) {
+
+                case "1":
+                    System.out.print("Id du dépôt (sommet) > ");
+                    long depotNN = Long.parseLong(sc.nextLine().trim());
+
+                    List<Long> pointsNN = new ArrayList<>(graph.getVertexIds());
+                    pointsNN.remove(depotNN);
+
+                    var tourNN = NearestNeighborTSP.tspNearestNeighbor(graph, depotNN, pointsNN);
+                    System.out.println("Tour (Nearest Neighbor) :");
+                    System.out.println(tourNN);
+                    break;
+
+                case "2":
+                    System.out.print("Id du dépôt (sommet) > ");
+                    long depotMST = Long.parseLong(sc.nextLine().trim());
+
+                    List<Long> pointsMST = new ArrayList<>(graph.getVertexIds());
+                    pointsMST.remove(depotMST);
+
+                    var tourMST = MSTApproxTSP.tspApproxMST(graph, depotMST, pointsMST);
+                    System.out.println("Tour (MST-approx) :");
+                    System.out.println(tourMST);
+                    break;
+
+                case "3":
+                    System.out.println("Découpage capacitaire : entrez un parcours (ids séparés par espace) puis la capacité C");
+                    System.out.print("Parcours> ");
+
+                    String line = sc.nextLine().trim();
+                    List<Long> parcours = Arrays.stream(line.split("\\s+"))
+                            .filter(s -> !s.isBlank())
+                            .map(Long::parseLong)
+                            .collect(Collectors.toList());
+
+                    if (parcours.isEmpty()) {
+                        System.out.println("Parcours vide !");
+                        break;
+                    }
+
+                    System.out.print("Capacité C> ");
+                    int C = Integer.parseInt(sc.nextLine().trim());
+
+                    var decoupes = DecoupeCapacitaire.decouper(graph, parcours, C, parcours.get(0));
+                    System.out.println("Découpes obtenues :");
+
+                    for (Tournee t : decoupes)
+                        System.out.println(" - " + t);
+
+                    break;
+
+                case "4":
+                    System.out.print("Id source> ");
+                    long src = Long.parseLong(sc.nextLine().trim());
+
+                    Dijkstra.Result res = Dijkstra.shortestPaths(graph, src);
+                    System.out.println("Distances depuis " + src + " : " + res.dist);
+                    System.out.println("Parent map : " + res.prev);
+                    break;
+
+                case "5":
+                    System.out.println("Planification des secteurs (coloration + capacité)");
+
+                    System.out.print("Capacité par camion > ");
+                    int cap = Integer.parseInt(sc.nextLine().trim());
+
+                    System.out.print("Nombre de camions disponibles > ");
+                    int nbCamions = Integer.parseInt(sc.nextLine().trim());
+
+                    var planning = PlanificationSecteurs.planify(graph, cap, nbCamions);
+
+                    System.out.println();
+                    PlanificationSecteurs.printPlanning(graph, planning);
+                    break;
+
+                case "0":
+                    return;
+
+                default:
+                    System.out.println("Choix invalide.");
+            }
+        }
+    }
+
+    /* ------------------- Collectivité ------------------- */
+    private static void collectiviteMenu() {
+        while (true) {
+            System.out.println("\n--- Collectivité : " + collectivite.getNom() + " ---");
+            System.out.println("1) Voir / associer le plan de la collectivité (fichier)");
+            System.out.println("2) Signaler une fermeture de tronçon");
+            System.out.println("3) Réouvrir un tronçon");
+            System.out.println("4) Ajouter une contrainte horaire sur un tronçon");
+            System.out.println("5) Consulter signalements / contraintes / remarques");
+            System.out.println("6) Exporter signalements dans un fichier texte");
+            System.out.println("0) Retour");
+            System.out.print("Choix> ");
+            String c = sc.nextLine().trim();
+            switch (c) {
+                case "1":
+                    System.out.println("Plan actuel: " + (collectivite.getPlanFichier() == null ? "(aucun)" : collectivite.getPlanFichier()));
+                    System.out.print("Chemin fichier à associer (laisser vide pour annuler)> ");
+                    String p = sc.nextLine().trim();
+                    if (!p.isBlank()) {
+                        collectivite.setPlanFichier(p);
+                        System.out.println("Plan associé.");
+                    } else {
+                        System.out.println("Aucun changement.");
+                    }
+                    break;
+                case "2":
+                    System.out.print("Sommet u> ");
+                    long u = Long.parseLong(sc.nextLine().trim());
+                    System.out.print("Sommet v> ");
+                    long v = Long.parseLong(sc.nextLine().trim());
+                    System.out.print("Motif (optionnel)> ");
+                    String motif = sc.nextLine().trim();
+                    collectivite.signalerFermeture(u, v, motif);
+                    System.out.println("Fermeture signalée pour tronçon " + u + "-" + v);
+                    break;
+                case "3":
+                    System.out.print("Sommet u> ");
+                    long uo = Long.parseLong(sc.nextLine().trim());
+                    System.out.print("Sommet v> ");
+                    long vo = Long.parseLong(sc.nextLine().trim());
+                    collectivite.enleverFermeture(uo, vo);
+                    System.out.println("Réouverture enregistrée pour tronçon " + uo + "-" + vo);
+                    break;
+                case "4":
+                    System.out.print("Sommet u> ");
+                    long uh = Long.parseLong(sc.nextLine().trim());
+                    System.out.print("Sommet v> ");
+                    long vh = Long.parseLong(sc.nextLine().trim());
+                    System.out.print("Plage horaire (ex: 08:00-12:00)> ");
+                    String plage = sc.nextLine().trim();
+                    collectivite.ajouterContrainteHoraire(uh, vh, plage);
+                    System.out.println("Contrainte ajoutée pour " + uh + "-" + vh + " -> " + plage);
+                    break;
+                case "5":
+                    System.out.println("Plan fichier: " + (collectivite.getPlanFichier() == null ? "(aucun)" : collectivite.getPlanFichier()));
+                    System.out.println("Fermetures:");
+                    if (collectivite.getFermetures().isEmpty()) System.out.println("  (aucune)");
+                    else collectivite.getFermetures().forEach(s -> System.out.println("  - " + s));
+                    System.out.println("Contraintes horaires:");
+                    if (collectivite.getContraintesHoraires().isEmpty()) System.out.println("  (aucune)");
+                    else collectivite.getContraintesHoraires().forEach((k, list) -> System.out.println("  " + k + " -> " + String.join(", ", list)));
+                    System.out.println("Remarques:");
+                    if (collectivite.getRemarques().isEmpty()) System.out.println("  (aucune)");
+                    else collectivite.getRemarques().forEach(r -> System.out.println("  - " + r));
+                    break;
+                case "6":
+                    System.out.print("Chemin fichier de sortie> ");
+                    String out = sc.nextLine().trim();
+                    try {
+                        collectivite.exporterSignalements(out);
+                        System.out.println("Export réalisé : " + out);
+                    } catch (IOException e) {
+                        System.out.println("Erreur export : " + e.getMessage());
+                    }
+                    break;
+                case "0": return;
+                default: System.out.println("Choix invalide.");
+            }
+        }
+    }
+}
