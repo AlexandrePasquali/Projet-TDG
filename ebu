@@ -1,0 +1,95 @@
+package model;
+
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.*;
+
+public class Collectivite {
+    private final String nom;
+    private final Set<String> fermetures = new LinkedHashSet<>();
+    private final Map<String, List<String>> contraintesHoraires = new LinkedHashMap<>();
+    private final List<String> remarques = new ArrayList<>();
+    private String planFichier = null;
+
+    public Collectivite(String nom) {
+        this.nom = nom;
+    }
+
+    public String getNom() {
+        return nom;
+    }
+
+    private String keyOf(long u, long v) {
+        if (u <= v) return u + "-" + v;
+        return v + "-" + u;
+    }
+
+    public void signalerFermeture(long u, long v, String motif) {
+        String k = keyOf(u, v);
+        fermetures.add(k);
+        if (motif != null && !motif.isBlank()) {
+            remarques.add("Fermeture " + k + " : " + motif);
+        } else {
+            remarques.add("Fermeture " + k);
+        }
+    }
+
+    public void enleverFermeture(long u, long v) {
+        String k = keyOf(u, v);
+        fermetures.remove(k);
+        remarques.add("Réouverture " + k);
+    }
+
+    public Set<String> getFermetures() {
+        return Collections.unmodifiableSet(fermetures);
+    }
+
+    public void ajouterContrainteHoraire(long u, long v, String plage) {
+        String k = keyOf(u, v);
+        contraintesHoraires.computeIfAbsent(k, x -> new ArrayList<>()).add(plage);
+        remarques.add("Contrainte horaire " + k + " -> " + plage);
+    }
+
+    public Map<String, List<String>> getContraintesHoraires() {
+        return Collections.unmodifiableMap(contraintesHoraires);
+    }
+
+    public void addRemarque(String r) {
+        if (r != null && !r.isBlank()) remarques.add(r);
+    }
+
+    public List<String> getRemarques() {
+        return Collections.unmodifiableList(remarques);
+    }
+
+    public void setPlanFichier(String path) {
+        this.planFichier = path;
+        remarques.add("Plan associé : " + path);
+    }
+
+    public String getPlanFichier() {
+        return planFichier;
+    }
+
+    public void exporterSignalements(String outFile) throws IOException {
+        try (FileWriter fw = new FileWriter(outFile)) {
+            fw.write("Collectivité: " + nom + "\n\n");
+            fw.write("Plan fichier: " + (planFichier == null ? "non fourni" : planFichier) + "\n\n");
+
+            fw.write("Fermetures signalées:\n");
+            if (fermetures.isEmpty()) fw.write("  (aucune)\n");
+            else for (String f : fermetures) fw.write("  " + f + "\n");
+            fw.write("\n");
+
+            fw.write("Contraintes horaires:\n");
+            if (contraintesHoraires.isEmpty()) fw.write("  (aucune)\n");
+            else for (var e : contraintesHoraires.entrySet())
+                fw.write("  " + e.getKey() + " -> " + String.join(", ", e.getValue()) + "\n");
+            fw.write("\n");
+
+            fw.write("Remarques:\n");
+            if (remarques.isEmpty()) fw.write("  (aucune)\n");
+            else for (String r : remarques) fw.write("  - " + r + "\n");
+        }
+    }
+}
