@@ -1,0 +1,50 @@
+package alg;
+
+import model.Graph;
+import model.Tournee;
+import model.Vertex;
+
+import java.util.*;
+
+public class DecoupeCapacitaire {
+
+    public static List<Tournee> decouper(Graph g, List<Long> parcours, int capacite, long depotId) {
+        List<Tournee> tours = new ArrayList<>();
+        if (parcours.size() <= 1) {
+
+            Tournee t = new Tournee();
+            t.addEtape(depotId);
+            if (parcours.size() == 1 && parcours.get(0) != depotId) {
+                t.addEtape(parcours.get(0));
+                t.addCharge(g.getVertex(parcours.get(0)).getDemand());
+            }
+            t.addEtape(depotId);
+            tours.add(t);
+            return tours;
+        }
+
+        Tournee t = new Tournee();
+        t.addEtape(depotId);
+        int currentCharge = 0;
+
+        for (int i = 1; i < parcours.size() - 1; i++) {
+            long vid = parcours.get(i);
+            Vertex v = g.getVertex(vid);
+            int d = v != null ? v.getDemand() : 1;
+            if (currentCharge + d > capacite) {
+                t.addEtape(depotId);
+                tours.add(t);
+                t = new Tournee();
+                t.addEtape(depotId);
+                currentCharge = 0;
+            }
+            t.addEtape(vid);
+            t.addCharge(d);
+            currentCharge += d;
+        }
+
+        t.addEtape(depotId);
+        tours.add(t);
+        return tours;
+    }
+}
