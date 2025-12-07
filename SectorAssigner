@@ -1,0 +1,59 @@
+package alg;
+
+import model.Graph;
+import model.Vertex;
+
+import java.util.*;
+
+public class SectorAssigner {
+
+    public static Map<String, List<Long>> assign(Graph g, long depotId, int maxPerSector) {
+        Map<String, List<Long>> result = new LinkedHashMap<>();
+        Set<Long> visited = new HashSet<>();
+        visited.add(depotId); // don't include depot in sectors
+
+        int sectorIdx = 1;
+
+        for (Long start : g.getVertexIds()) {
+            if (visited.contains(start)) continue;
+            Queue<Long> q = new ArrayDeque<>();
+            q.add(start);
+            visited.add(start);
+
+            List<Long> currentSector = new ArrayList<>();
+            while (!q.isEmpty()) {
+                long u = q.poll();
+                if (u == depotId) continue;
+                currentSector.add(u);
+                if (currentSector.size() >= maxPerSector) {
+                    // commit sector
+                    String sname = "S" + sectorIdx++;
+                    result.put(sname, new ArrayList<>(currentSector));
+                    // mark in graph
+                    for (Long id : currentSector) {
+                        Vertex v = g.getVertex(id);
+                        if (v != null) v.setSecteur(sname);
+                    }
+                    currentSector.clear();
+                }
+                // enqueue neighbors
+                for (var e : g.getEdgesFrom(u)) {
+                    long v = e.getTo();
+                    if (!visited.contains(v) && v != depotId) {
+                        visited.add(v);
+                        q.add(v);
+                    }
+                }
+            }
+if (!currentSector.isEmpty()) {
+                String sname = "S" + sectorIdx++;
+                result.put(sname, new ArrayList<>(currentSector));
+                for (Long id : currentSector) {
+                    Vertex v = g.getVertex(id);
+                    if (v != null) v.setSecteur(sname);
+                }
+            }
+        }
+        return result;
+    }
+}
