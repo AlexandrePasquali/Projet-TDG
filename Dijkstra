@@ -1,0 +1,55 @@
+package alg;
+
+import model.Edge;
+import model.Graph;
+
+import java.util.*;
+
+public class Dijkstra {
+
+    public static class Result {
+        public final Map<Long, Double> dist;
+        public final Map<Long, Long> prev;
+        public Result(Map<Long, Double> d, Map<Long, Long> p) { dist = d; prev = p; }
+    }
+
+    public static Result shortestPaths(Graph g, long source) {
+        Map<Long, Double> dist = new HashMap<>();
+        Map<Long, Long> prev = new HashMap<>();
+        for (Long id : g.getVertexIds()) dist.put(id, Double.POSITIVE_INFINITY);
+        dist.put(source, 0.0);
+
+        PriorityQueue<Long> pq = new PriorityQueue<>(Comparator.comparingDouble(dist::get));
+        pq.add(source);
+
+        while (!pq.isEmpty()) {
+            long u = pq.poll();
+            double du = dist.get(u);
+
+            for (Edge e : g.getEdgesFrom(u)) {
+                long v = e.getTo();
+                if (e.isOriented() && e.getFrom() != u) continue;
+                double alt = du + e.getWeight();
+                if (alt < dist.get(v)) {
+                    dist.put(v, alt);
+                    prev.put(v, u);
+                    pq.remove(v);
+                    pq.add(v);
+                }
+            }
+        }
+        return new Result(dist, prev);
+    }
+
+    public static List<Long> reconstructPath(Map<Long, Long> prev, long src, long dest) {
+        LinkedList<Long> path = new LinkedList<>();
+        Long u = dest;
+        while (u != null && u != src) {
+            path.addFirst(u);
+            u = prev.get(u);
+        }
+        if (u == null) return Collections.emptyList();
+        path.addFirst(src);
+        return path;
+    }
+}
