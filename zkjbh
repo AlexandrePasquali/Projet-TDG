@@ -260,3 +260,26 @@ public class Collectivite {
     public String getPlanFichier() {
         return planFichier;
     }
+
+    public void exporterSignalements(String outFile) throws IOException {
+        try (FileWriter fw = new FileWriter(outFile)) {
+            fw.write("Collectivité: " + nom + "\n\n");
+            fw.write("Plan fichier: " + (planFichier == null ? "non fourni" : planFichier) + "\n\n");
+
+            fw.write("Fermetures signalées:\n");
+            if (fermetures.isEmpty()) fw.write("  (aucune)\n");
+            else for (String f : fermetures) fw.write("  " + f + "\n");
+            fw.write("\n");
+
+            fw.write("Contraintes horaires:\n");
+            if (contraintesHoraires.isEmpty()) fw.write("  (aucune)\n");
+            else for (var e : contraintesHoraires.entrySet())
+                fw.write("  " + e.getKey() + " -> " + String.join(", ", e.getValue()) + "\n");
+            fw.write("\n");
+
+            fw.write("Remarques:\n");
+            if (remarques.isEmpty()) fw.write("  (aucune)\n");
+            else for (String r : remarques) fw.write("  - " + r + "\n");
+        }
+    }
+}
