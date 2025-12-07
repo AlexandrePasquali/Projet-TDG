@@ -1,0 +1,28 @@
+package model;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Tournee {
+    private final List<Long> parcours = new ArrayList<>();
+    private double cout = 0.0;
+    private int charge = 0;
+
+    public void addEtape(long id) { parcours.add(id); }
+    public List<Long> getParcours() { return parcours; }
+
+    public double getCout() { return cout; }
+    public void addCout(double c) { cout += c; }
+
+    public int getCharge() { return charge; }
+    public void addCharge(int q) { charge += q; }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Tournée: ");
+        for (Long v : parcours) sb.append(v).append("->");
+        sb.append(" | charge=").append(charge).append(" | cout=").append(String.format("%.2f", cout));
+        return sb.toString();
+    }
+}
