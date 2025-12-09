@@ -1,0 +1,156 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<gexf xmlns="http://gexf.net/1.3" version="1.3" xmlns:viz="http://gexf.net/1.3/viz" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://gexf.net/1.3 http://gexf.net/1.3/gexf.xsd">
+  <meta lastmodifieddate="2025-11-19">
+    <creator>Gephi 0.10.1</creator>
+    <title></title>
+    <description></description>
+  </meta>
+  <graph defaultedgetype="undirected" mode="static">
+    <attributes class="node" mode="static">
+      <attribute id="x" title="x" type="integer"/>
+      <attribute id="y" title="y" type="integer"/>
+      <attribute id="degree" title="Degré" type="integer">
+        <default>0</default>
+      </attribute>
+      <attribute id="type" title="type" type="string"/>
+      <attribute id="componentnumber" title="Component ID" type="integer">
+        <default>0</default>
+      </attribute>
+    </attributes>
+    <nodes>
+      <node id="0" label="dépot">
+        <attvalues>
+          <attvalue for="x" value="0"/>
+          <attvalue for="y" value="0"/>
+          <attvalue for="degree" value="3"/>
+          <attvalue for="type" value="dépot"/>
+          <attvalue for="componentnumber" value="0"/>
+        </attvalues>
+        <viz:size value="10.0"/>
+        <viz:position x="37.942825" y="-21.785511"/>
+        <viz:color r="65" g="163" b="120"/>
+      </node>
+      <node id="1" label="intersection">
+        <attvalues>
+          <attvalue for="x" value="1"/>
+          <attvalue for="y" value="0"/>
+          <attvalue for="degree" value="4"/>
+          <attvalue for="type" value="intersection"/>
+          <attvalue for="componentnumber" value="0"/>
+        </attvalues>
+        <viz:size value="10.0"/>
+        <viz:position x="33.728855" y="14.954926"/>
+        <viz:color r="0" g="109" b="44"/>
+      </node>
+      <node id="2" label="house">
+        <attvalues>
+          <attvalue for="x" value="2"/>
+          <attvalue for="y" value="0"/>
+          <attvalue for="degree" value="2"/>
+          <attvalue for="type" value="house"/>
+          <attvalue for="componentnumber" value="0"/>
+        </attvalues>
+        <viz:size value="10.0"/>
+        <viz:position x="6.7496862" y="41.934593"/>
+        <viz:color r="143" g="210" b="190"/>
+      </node>
+      <node id="3" label="house">
+        <attvalues>
+          <attvalue for="x" value="2"/>
+          <attvalue for="y" value="1"/>
+          <attvalue for="degree" value="2"/>
+          <attvalue for="type" value="house"/>
+          <attvalue for="componentnumber" value="0"/>
+        </attvalues>
+        <viz:size value="10.0"/>
+        <viz:position x="-24.513319" y="38.41877"/>
+        <viz:color r="143" g="210" b="190"/>
+      </node>
+      <node id="4" label="intersection">
+        <attvalues>
+          <attvalue for="x" value="1"/>
+          <attvalue for="y" value="1"/>
+          <attvalue for="degree" value="3"/>
+          <attvalue for="type" value="intersection"/>
+          <attvalue for="componentnumber" value="0"/>
+        </attvalues>
+        <viz:size value="10.0"/>
+        <viz:position x="-44.386158" y="12.463469"/>
+        <viz:color r="65" g="163" b="120"/>
+      </node>
+      <node id="5" label="house">
+        <attvalues>
+          <attvalue for="x" value="0"/>
+          <attvalue for="y" value="1"/>
+          <attvalue for="degree" value="2"/>
+          <attvalue for="type" value="house"/>
+          <attvalue for="componentnumber" value="0"/>
+        </attvalues>
+        <viz:size value="10.0"/>
+        <viz:position x="-46.635376" y="-16.925209"/>
+        <viz:color r="143" g="210" b="190"/>
+      </node>
+      <node id="6" label="house">
+        <attvalues>
+          <attvalue for="x" value="-1"/>
+          <attvalue for="y" value="1"/>
+          <attvalue for="degree" value="2"/>
+          <attvalue for="type" value="house"/>
+          <attvalue for="componentnumber" value="0"/>
+        </attvalues>
+        <viz:size value="10.0"/>
+        <viz:position x="-20.362152" y="-43.325645"/>
+        <viz:color r="143" g="210" b="190"/>
+      </node>
+      <node id="7" label="intersection">
+        <attvalues>
+          <attvalue for="x" value="-1"/>
+          <attvalue for="y" value="0"/>
+          <attvalue for="degree" value="2"/>
+          <attvalue for="type" value="intersection"/>
+          <attvalue for="componentnumber" value="0"/>
+        </attvalues>
+        <viz:size value="10.0"/>
+        <viz:position x="15.107454" y="-47.643173"/>
+        <viz:color r="143" g="210" b="190"/>
+      </node>
+      <node id="8" label="house">
+        <attvalues>
+          <attvalue for="x" value="0"/>
+          <attvalue for="y" value="-1"/>
+          <attvalue for="degree" value="1"/>
+          <attvalue for="type" value="house"/>
+          <attvalue for="componentnumber" value="0"/>
+        </attvalues>
+        <viz:size value="10.0"/>
+        <viz:position x="67.5728" y="-26.412851"/>
+        <viz:color r="237" g="248" b="251"/>
+      </node>
+      <node id="9" label="house">
+        <attvalues>
+          <attvalue for="x" value="1"/>
+          <attvalue for="y" value="-1"/>
+          <attvalue for="degree" value="1"/>
+          <attvalue for="type" value="house"/>
+          <attvalue for="componentnumber" value="0"/>
+        </attvalues>
+        <viz:size value="10.0"/>
+        <viz:position x="66.905365" y="38.122845"/>
+        <viz:color r="237" g="248" b="251"/>
+      </node>
+    </nodes>
+    <edges>
+      <edge id="0" source="0" target="1"/>
+      <edge id="1" source="1" target="2"/>
+      <edge id="2" source="2" target="3"/>
+      <edge id="3" source="3" target="4"/>
+      <edge id="4" source="4" target="5"/>
+      <edge id="5" source="5" target="6"/>
+      <edge id="6" source="6" target="7"/>
+      <edge id="7" source="7" target="0"/>
+      <edge id="8" source="1" target="9"/>
+      <edge id="9" source="0" target="8"/>
+      <edge id="10" source="4" target="1"/>
+    </edges>
+  </graph>
+</gexf>
